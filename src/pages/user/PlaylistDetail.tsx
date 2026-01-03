@@ -116,7 +116,7 @@ const PlaylistDetail: React.FC = () => {
 
   const filteredAddSongs = allSongs
     .filter(s => !items.some(i => i.song_id === s.id))
-    .filter(s => s.title.toLowerCase().includes(searchSong.toLowerCase()));
+    .filter(s => s.title.toLowerCase().includes(searchSong.toLowerCase()));\r\n  const firstPlayableSong = items.find(item => item.song)?.song;\r\n
 
   if (loading) {
     return (
@@ -252,6 +252,15 @@ const PlaylistDetail: React.FC = () => {
                 </Reorder.Item>
               ))}
             </Reorder.Group>
+          )}
+
+          {firstPlayableSong && (
+            <Button
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              onClick={() => navigate(`/user/view/${firstPlayableSong.id}?playlistId=${id}`)}
+            >
+              Começar louvor
+            </Button>
           )}
         </div>
       </div>
