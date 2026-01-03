@@ -7,7 +7,7 @@ const customSupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
 export default customSupabaseClient;
 
-customSupabaseClient.auth.setAuth(supabaseAnonKey);
+await customSupabaseClient.auth.signOut();
 
 export { 
     customSupabaseClient,
