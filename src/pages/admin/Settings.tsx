@@ -24,8 +24,8 @@ const Settings: React.FC = () => {
       setPin(savedPin);
       setConfirmPin(savedPin);
     } else {
-      setPin('Mylena 10!');
-      setConfirmPin('Mylena 10!');
+      setPin('ipg2026!');
+      setConfirmPin('ipg2026!');
     }
   };
 

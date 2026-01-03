@@ -10,7 +10,7 @@ interface PinProtectionProps {
   children: React.ReactNode;
 }
 
-const DEFAULT_PIN = 'Mylena 10!';
+const DEFAULT_PIN = 'ipg2026!';
 
 const PinProtection: React.FC<PinProtectionProps> = ({ children }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
