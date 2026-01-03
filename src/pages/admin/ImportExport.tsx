@@ -21,6 +21,7 @@ const ImportExport: React.FC = () => {
   const [importing, setImporting] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
+  const [importCategory, setImportCategory] = useState<'Louvor' | 'Hino'>('Louvor');
    const normalizeSongKey = (title: string, artist: string, content: string) => (
     `${title.trim().toLowerCase()}|${artist.trim().toLowerCase()}|${content.trim().toLowerCase()}`
   );
