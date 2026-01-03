@@ -1,46 +1,40 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getSetting } from '@/lib/db';
 import { Link } from 'react-router-dom';
+import { storeAdminPin, verifyAdminPin } from '@/lib/adminApi';
 
 interface PinProtectionProps {
   children: React.ReactNode;
 }
 
-const DEFAULT_PIN = 'Mylena 10!';
-
 const PinProtection: React.FC<PinProtectionProps> = ({ children }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
-  const [storedPin, setStoredPin] = useState(DEFAULT_PIN);
-
-  useEffect(() => {
-    const loadPin = async () => {
-      try {
-        const savedPin = await getSetting('pin');
-        if (savedPin) {
-          setStoredPin(savedPin);
-        }
-      } catch (err) {
-        console.error("Failed to load PIN setting:", err);
-      }
-    };
-    loadPin();
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === storedPin) {
-      setIsUnlocked(true);
-      setError('');
-    } else {
-      setError('PIN incorreto. Tente novamente.');
-      setPin('');
-    }
+    setError('');
+    setIsLoading(true);
+    verifyAdminPin(pin)
+      .then((ok) => {
+        if (ok) {
+          storeAdminPin(pin);
+          setIsUnlocked(true);
+          setError('');
+        } else {
+          setError('PIN incorreto. Tente novamente.');
+          setPin('');
+        }
+      })
+      .catch(() => {
+        setError('Falha ao validar PIN. Tente novamente.');
+      })
+      .finally(() => setIsLoading(false));
   };
 
   if (isUnlocked) {
@@ -79,7 +73,7 @@ const PinProtection: React.FC<PinProtectionProps> = ({ children }) => {
             )}
           </div>
 
-          <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+          <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white" disabled={isLoading}>
             Desbloquear
           </Button>
           

@@ -1,39 +1,33 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Lock } from 'lucide-react';
-import { getSetting, setSetting } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { setAdminPin, storeAdminPin } from '@/lib/adminApi';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [currentPin, setCurrentPin] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    const savedPin = await getSetting('pin');
-    if (savedPin) {
-      setPin(savedPin);
-      setConfirmPin(savedPin);
-    } else {
-      setPin('Mylena 10!');
-      setConfirmPin('Mylena 10!');
-    }
-  };
-
   const handleSave = async () => {
+    if (!currentPin.trim()) {
+      toast({
+        title: 'Erro',
+        description: 'Informe o PIN atual.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (pin !== confirmPin) {
       toast({
         title: 'Erro',
-        description: 'Os PINs não coincidem.',
+        description: 'Os PINs nÇœo coincidem.',
         variant: 'destructive',
       });
       return;
@@ -42,24 +36,38 @@ const Settings: React.FC = () => {
     if (pin.length < 4) {
       toast({
         title: 'Erro',
-        description: 'O PIN deve ter no mínimo 4 caracteres.',
+        description: 'O PIN deve ter no mÇðnimo 4 caracteres.',
         variant: 'destructive',
       });
       return;
     }
 
-    await setSetting('pin', pin);
-
-    toast({
-      title: 'Configurações salvas',
-      description: 'Seu PIN de administrador foi atualizado.',
-    });
+    try {
+      const ok = await setAdminPin(currentPin.trim(), pin.trim());
+      if (!ok) {
+        throw new Error('Falha ao atualizar PIN');
+      }
+      storeAdminPin(pin.trim());
+      toast({
+        title: 'ConfiguraÇõÇæes salvas',
+        description: 'Seu PIN de administrador foi atualizado.',
+      });
+      setCurrentPin('');
+      setPin('');
+      setConfirmPin('');
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao atualizar o PIN. Verifique o PIN atual.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
     <>
       <Helmet>
-        <title>Configurações - Admin</title>
+        <title>ConfiguraÇõÇæes - Admin</title>
       </Helmet>
 
       <div className="min-h-screen bg-background text-foreground">
@@ -69,7 +77,7 @@ const Settings: React.FC = () => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
-            <h1 className="text-sm font-bold">Configurações</h1>
+            <h1 className="text-sm font-bold">ConfiguraÇõÇæes</h1>
           </div>
         </nav>
 
@@ -82,10 +90,23 @@ const Settings: React.FC = () => {
             <section className="bg-card border border-border rounded-lg p-5">
               <div className="flex items-center gap-2 mb-6">
                 <Lock className="w-5 h-5 text-purple-600" />
-                <h2 className="text-lg font-bold">Segurança</h2>
+                <h2 className="text-lg font-bold">SeguranÇõa</h2>
               </div>
 
               <div className="space-y-4 max-w-md">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    PIN Atual
+                  </label>
+                  <input
+                    type="password"
+                    value={currentPin}
+                    onChange={(e) => setCurrentPin(e.target.value)}
+                    placeholder="Digite o PIN atual"
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                     Novo PIN
@@ -115,7 +136,7 @@ const Settings: React.FC = () => {
                 <div className="pt-2">
                   <Button onClick={handleSave} className="w-full bg-purple-600 hover:bg-purple-700">
                     <Save className="w-4 h-4 mr-2" />
-                    Salvar Alterações
+                    Salvar AlteraÇõÇæes
                   </Button>
                 </div>
               </div>

@@ -1,12 +1,33 @@
 import { Song, RecentSong } from '@/types';
+import { supabase } from '@/lib/customSupabaseClient';
+import {
+  bulkUpsertSongsAdmin,
+  clearAllSongsAdmin,
+  deleteSongAdmin,
+  saveSongAdmin
+} from '@/lib/adminApi';
 
 const DB_NAME = 'ChordManagerDB';
 const DB_VERSION = 1;
-const SONGS_STORE = 'songs';
 const RECENT_STORE = 'recent';
 const SETTINGS_STORE = 'settings';
 
 let db: IDBDatabase | null = null;
+
+const parseDate = (value?: string | null) => {
+  if (!value) return 0;
+  return new Date(value).getTime();
+};
+
+const mapRowToSong = (row: any): Song => ({
+  id: row.id,
+  title: row.title,
+  artist: row.artist ?? undefined,
+  key: row.key ?? undefined,
+  content: row.content,
+  createdAt: parseDate(row.created_at),
+  updatedAt: parseDate(row.updated_at),
+});
 
 export const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -26,13 +47,6 @@ export const initDB = (): Promise<IDBDatabase> => {
     request.onupgradeneeded = (event) => {
       const database = (event.target as IDBOpenDBRequest).result;
 
-      if (!database.objectStoreNames.contains(SONGS_STORE)) {
-        const songsStore = database.createObjectStore(SONGS_STORE, { keyPath: 'id' });
-        songsStore.createIndex('title', 'title', { unique: false });
-        songsStore.createIndex('artist', 'artist', { unique: false });
-        songsStore.createIndex('createdAt', 'createdAt', { unique: false });
-      }
-
       if (!database.objectStoreNames.contains(RECENT_STORE)) {
         const recentStore = database.createObjectStore(RECENT_STORE, { keyPath: 'songId' });
         recentStore.createIndex('accessedAt', 'accessedAt', { unique: false });
@@ -46,52 +60,42 @@ export const initDB = (): Promise<IDBDatabase> => {
 };
 
 export const saveSong = async (song: Song): Promise<void> => {
-  const database = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([SONGS_STORE], 'readwrite');
-    const store = transaction.objectStore(SONGS_STORE);
-    store.put(song);
+  await saveSongAdmin(song);
+};
 
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-    transaction.onabort = () => reject(transaction.error);
-  });
+export const bulkUpsertSongs = async (songs: Song[]): Promise<void> => {
+  await bulkUpsertSongsAdmin(songs);
 };
 
 export const getSong = async (id: string): Promise<Song | undefined> => {
-  const database = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([SONGS_STORE], 'readonly');
-    const store = transaction.objectStore(SONGS_STORE);
-    const request = store.get(id);
+  const { data, error } = await supabase
+    .from('songs')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  if (error) {
+    console.error('Error fetching song:', error);
+    return undefined;
+  }
+  if (!data) return undefined;
+  return mapRowToSong(data);
 };
 
 export const getAllSongs = async (): Promise<Song[]> => {
-  const database = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([SONGS_STORE], 'readonly');
-    const store = transaction.objectStore(SONGS_STORE);
-    const request = store.getAll();
+  const { data, error } = await supabase
+    .from('songs')
+    .select('*');
 
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error);
-  });
+  if (error) {
+    console.error('Error fetching songs:', error);
+    return [];
+  }
+  return (data || []).map(mapRowToSong);
 };
 
 export const deleteSong = async (id: string): Promise<void> => {
-  const database = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = database.transaction([SONGS_STORE], 'readwrite');
-    const store = transaction.objectStore(SONGS_STORE);
-    const request = store.delete(id);
-
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  await deleteSongAdmin(id);
 };
 
 export const addRecentSong = async (songId: string): Promise<void> => {
@@ -136,15 +140,23 @@ export const getRecentSongs = async (): Promise<Song[]> => {
     request.onerror = () => reject(request.error);
   });
 
-  const songs: Song[] = [];
-  for (const entry of recentEntries) {
-    const song = await getSong(entry.songId);
-    if (song) {
-      songs.push(song);
-    }
+  if (recentEntries.length === 0) return [];
+
+  const ids = recentEntries.map(entry => entry.songId);
+  const { data, error } = await supabase
+    .from('songs')
+    .select('*')
+    .in('id', ids);
+
+  if (error) {
+    console.error('Error fetching recent songs:', error);
+    return [];
   }
 
-  return songs;
+  const songsById = new Map((data || []).map((row) => [row.id, mapRowToSong(row)]));
+  return recentEntries
+    .map((entry) => songsById.get(entry.songId))
+    .filter((song): song is Song => !!song);
 };
 
 const pruneRecentSongs = async (): Promise<void> => {
@@ -200,7 +212,7 @@ export const setSetting = async (key: string, value: any): Promise<void> => {
 export const clearAllData = async (): Promise<void> => {
   const database = await initDB();
   
-  const stores = [SONGS_STORE, RECENT_STORE];
+  const stores = [RECENT_STORE];
   
   for (const storeName of stores) {
     await new Promise<void>((resolve, reject) => {
@@ -212,4 +224,6 @@ export const clearAllData = async (): Promise<void> => {
       request.onerror = () => reject(request.error);
     });
   }
+
+  await clearAllSongsAdmin();
 };

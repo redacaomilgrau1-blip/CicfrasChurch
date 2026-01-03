@@ -13,7 +13,6 @@ import SongEditor from '@/pages/admin/SongEditor';
 import ImportExport from '@/pages/admin/ImportExport';
 import Settings from '@/pages/admin/Settings';
 import { initDB } from '@/lib/db';
-import { seedExampleSongs } from '@/lib/seedData';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 
 function App() {
@@ -21,7 +20,6 @@ function App() {
     const initialize = async () => {
       try {
         await initDB();
-        await seedExampleSongs();
       } catch (error) {
         console.error("Failed to initialize DB:", error);
       }

@@ -21,6 +21,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        await supabase.auth.signInAnonymously();
+        const { data: { session: anonSession } } = await supabase.auth.getSession();
+        handleSession(anonSession);
+        return;
+      }
       handleSession(session);
     };
 
