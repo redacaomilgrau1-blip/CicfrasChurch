@@ -99,7 +99,7 @@ const SongViewer: React.FC = () => {
               {line.chordPositions?.map((cp, idx) => {
                 const transposedChord = transposeChord(cp.chord, transpose, accidentalPref);
                 return (
-                  <span key={idx} className="absolute" style={{ left: `${cp.position * 0.6}em` }}>
+                  <span key={idx} className="absolute" style={{ left: `${cp.position}ch` }}>
                     {transposedChord}
                   </span>
                 );
@@ -128,7 +128,7 @@ const SongViewer: React.FC = () => {
                 {line.chordPositions?.map((cp, idx) => {
                   const transposedChord = transposeChord(cp.chord, transpose, accidentalPref);
                   return (
-                    <span key={idx} className="absolute" style={{ left: `${cp.position * 0.6}em` }}>
+                    <span key={idx} className="absolute" style={{ left: `${cp.position}ch` }}>
                       {transposedChord}
                     </span>
                   );
