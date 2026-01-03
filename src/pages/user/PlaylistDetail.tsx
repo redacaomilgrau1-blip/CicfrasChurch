@@ -255,14 +255,15 @@ const PlaylistDetail: React.FC = () => {
           )}
 
           {firstPlayableSong && (
-            <Button
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => navigate(`/user/view/${firstPlayableSong.id}?playlistId=${id}`)}
-            >
-              Começar louvor
-            </Button>
-          )}
-        </div>
+            <div className="fixed bottom-4 left-1/2 w-full max-w-3xl -translate-x-1/2 px-4">
+              <Button
+                className="w-full bg-purple-600 hover:bg-purple-700"
+                onClick={() => navigate(`/user/view/${firstPlayableSong.id}?playlistId=${id}`)}
+              >
+                Comecar louvor
+              </Button>
+            </div>
+          )}</div>
       </div>
     </>
   );
