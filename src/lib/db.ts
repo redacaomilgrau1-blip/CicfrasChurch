@@ -1,4 +1,5 @@
 import { Song, RecentSong } from '@/types';
+import { deleteSongInSupabase, fetchSongFromSupabase, fetchSongsFromSupabase, upsertSongInSupabase } from '@/lib/songService';
 
 const DB_NAME = 'ChordManagerDB';
 const DB_VERSION = 1;
@@ -45,9 +46,9 @@ export const initDB = (): Promise<IDBDatabase> => {
   });
 };
 
-export const saveSong = async (song: Song): Promise<void> => {
+const saveSongLocally = async (song: Song): Promise<void> => {
   const database = await initDB();
-  return new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     const transaction = database.transaction([SONGS_STORE], 'readwrite');
     const store = transaction.objectStore(SONGS_STORE);
     store.put(song);
@@ -58,7 +59,20 @@ export const saveSong = async (song: Song): Promise<void> => {
   });
 };
 
-export const getSong = async (id: string): Promise<Song | undefined> => {
+const saveSongsLocally = async (songs: Song[]): Promise<void> => {
+  if (songs.length === 0) return;
+  const database = await initDB();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction([SONGS_STORE], 'readwrite');
+    const store = transaction.objectStore(SONGS_STORE);
+    songs.forEach((song) => store.put(song));
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+    transaction.onabort = () => reject(transaction.error);
+  });
+};
+
+const getSongLocally = async (id: string): Promise<Song | undefined> => {
   const database = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([SONGS_STORE], 'readonly');
@@ -70,7 +84,7 @@ export const getSong = async (id: string): Promise<Song | undefined> => {
   });
 };
 
-export const getAllSongs = async (): Promise<Song[]> => {
+const getAllSongsLocally = async (): Promise<Song[]> => {
   const database = await initDB();
   return new Promise((resolve, reject) => {
     const transaction = database.transaction([SONGS_STORE], 'readonly');
@@ -82,9 +96,33 @@ export const getAllSongs = async (): Promise<Song[]> => {
   });
 };
 
+export const saveSong = async (song: Song): Promise<void> => {
+  await saveSongLocally(song);
+
+  await upsertSongInSupabase(song);
+};
+
+export const getSong = async (id: string): Promise<Song | undefined> => {
+  const remoteSong = await fetchSongFromSupabase(id);
+  if (remoteSong) {
+    await saveSongLocally(remoteSong);
+    return remoteSong;
+  }
+
+  return undefined;
+};
+
+export const getAllSongs = async (): Promise<Song[]> => {
+  const remoteSongs = await fetchSongsFromSupabase();
+  if (remoteSongs.length > 0) {
+    await saveSongsLocally(remoteSongs);
+  }
+  return remoteSongs;
+};
+
 export const deleteSong = async (id: string): Promise<void> => {
   const database = await initDB();
-  return new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     const transaction = database.transaction([SONGS_STORE], 'readwrite');
     const store = transaction.objectStore(SONGS_STORE);
     const request = store.delete(id);
@@ -92,6 +130,15 @@ export const deleteSong = async (id: string): Promise<void> => {
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
+
+  await deleteSongInSupabase(id);
+};
+
+export const syncLocalSongsToSupabase = async (): Promise<void> => {
+  const localSongs = await getAllSongsLocally();
+  for (const song of localSongs) {
+    await upsertSongInSupabase(song);
+  }
 };
 
 export const addRecentSong = async (songId: string): Promise<void> => {

@@ -22,6 +22,7 @@ export interface AppSettings {
 export interface Playlist {
   id: string;
   name: string;
+  user_id?: string;
   created_at?: string;
 }
 

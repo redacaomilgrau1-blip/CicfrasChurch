@@ -1,14 +1,19 @@
 
 import { supabase } from './customSupabaseClient';
-import { Playlist, PlaylistItem } from '@/types';
+import { Playlist, PlaylistItem, Song } from '@/types';
+import { upsertSongInSupabase } from '@/lib/songService';
 
 // Playlist CRUD
 export async function createPlaylist(name: string): Promise<Playlist | null> {
-  // RLS now handles the user_id default via auth.uid()
-  // We just insert the name.
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error('Error fetching user for playlist:', userError);
+    return null;
+  }
+
   const { data, error } = await supabase
     .from('playlists')
-    .insert([{ name }])
+    .insert([{ name, user_id: user.id }])
     .select()
     .single();
 
@@ -71,8 +76,16 @@ export async function getPlaylistItems(playlistId: string): Promise<PlaylistItem
   return data || [];
 }
 
-export async function addSongToPlaylist(playlistId: string, songId: string): Promise<PlaylistItem | null> {
+export async function addSongToPlaylist(
+  playlistId: string,
+  songId: string,
+  song?: Song
+): Promise<PlaylistItem | null> {
   try {
+    if (song) {
+      await upsertSongInSupabase(song);
+    }
+
     // Get current max position to append to the end
     // Note: We use maybeSingle() instead of single() to gracefully handle empty results
     const { data: maxPosData } = await supabase

@@ -89,9 +89,9 @@ const PlaylistDetail: React.FC = () => {
 
   const handleAddSong = async (songId: string) => {
     if (!id) return;
-    const newItem = await addSongToPlaylist(id, songId);
+    const songData = allSongs.find(s => s.id === songId);
+    const newItem = await addSongToPlaylist(id, songId, songData);
     if (newItem) {
-      const songData = allSongs.find(s => s.id === songId);
       // Optimistically update list
       setItems(current => [...current, { ...newItem, song: songData }]);
       toast({ title: "Música adicionada" });

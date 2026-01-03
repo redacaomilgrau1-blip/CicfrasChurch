@@ -21,8 +21,10 @@ const ImportExport: React.FC = () => {
   const [importing, setImporting] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
-  const [importCategory, setImportCategory] = useState<'Louvor' | 'Hino'>('Louvor');
-  
+   const normalizeSongKey = (title: string, artist: string, content: string) => (
+    `${title.trim().toLowerCase()}|${artist.trim().toLowerCase()}|${content.trim().toLowerCase()}`
+  );
+
   // Refs for hidden file inputs
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const chordProInputRef = useRef<HTMLInputElement>(null);
@@ -142,6 +144,8 @@ Separada por três traços`;
         const prefixLower = prefix.toLowerCase();
         
         const sections = splitChordProSongs(content);
+        const existingSongs = await getAllSongs();
+        const existingKeys = new Set(existingSongs.map(song => normalizeSongKey(song.title, song.artist || '', song.content)));
         
         let importedCount = 0;
         let failCount = 0;
@@ -156,17 +160,24 @@ Separada por três traços`;
             try {
               const now = Date.now();
               // Create a unique ID to ensure no collisions during bulk import
-              const uniqueId = `song-${now}-${Math.random().toString(36).substr(2, 6)}`;
+                            const uniqueId = `song-${now}-${Math.random().toString(36).substr(2, 6)}`;
               const title = prefixLower && !parsed.title.toLowerCase().startsWith(prefixLower)
                 ? `${prefix} ${parsed.title}`
                 : parsed.title;
+              const artist = parsed.artist || 'Desconhecido';
+              const contentText = parsed.content;
+              const dedupeKey = normalizeSongKey(title, artist, contentText);
+              if (existingKeys.has(dedupeKey)) {
+                continue;
+              }
+              existingKeys.add(dedupeKey);
               
               const song: Song = {
                 id: uniqueId,
                 title,
-                artist: parsed.artist || 'Desconhecido',
+                artist,
                 key: parsed.key,
-                content: parsed.content,
+                content: contentText,
                 createdAt: now,
                 updatedAt: now,
               };
