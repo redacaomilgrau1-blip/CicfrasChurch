@@ -44,7 +44,7 @@ const PlaylistDetail: React.FC = () => {
       // 1. Fetch playlist metadata
       const pData = await getPlaylist(playlistId);
       if (!pData) {
-        toast({ title: "Playlist não encontrada", variant: "destructive" });
+        toast({ title: "Playlist nï¿½o encontrada", variant: "destructive" });
         navigate('/user');
         return;
       }
@@ -83,7 +83,7 @@ const PlaylistDetail: React.FC = () => {
     if (success) {
       setItems(prev => prev.filter(i => i.id !== itemId));
     } else {
-      toast({ title: "Erro ao remover música", variant: "destructive" });
+      toast({ title: "Erro ao remover mï¿½sica", variant: "destructive" });
     }
   };
 
@@ -94,10 +94,10 @@ const PlaylistDetail: React.FC = () => {
     if (newItem) {
       // Optimistically update list
       setItems(current => [...current, { ...newItem, song: songData }]);
-      toast({ title: "Música adicionada" });
+      toast({ title: "Mï¿½sica adicionada" });
       setIsAddOpen(false);
     } else {
-      toast({ title: "Erro ao adicionar", description: "Verifique sua conexão.", variant: "destructive" });
+      toast({ title: "Erro ao adicionar", description: "Verifique sua conexï¿½o.", variant: "destructive" });
     }
   };
 
@@ -107,7 +107,7 @@ const PlaylistDetail: React.FC = () => {
       const success = await deletePlaylist(id);
       if (success) {
         navigate('/user');
-        toast({ title: "Playlist excluída" });
+        toast({ title: "Playlist excluï¿½da" });
       } else {
         toast({ title: "Erro ao excluir", variant: "destructive" });
       }
@@ -164,12 +164,12 @@ const PlaylistDetail: React.FC = () => {
               <DialogTrigger asChild>
                 <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Música
+                  Adicionar MÃºsica
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-h-[80vh] flex flex-col">
                 <DialogHeader>
-                  <DialogTitle>Adicionar à Playlist</DialogTitle>
+                  <DialogTitle>Adicionar  Playlist</DialogTitle>
                 </DialogHeader>
                 <Input 
                   placeholder="Buscar na biblioteca..." 
@@ -180,7 +180,7 @@ const PlaylistDetail: React.FC = () => {
                 <div className="overflow-y-auto flex-1 border rounded-md p-1 min-h-[200px]">
                   {filteredAddSongs.length === 0 ? (
                     <p className="text-center text-sm text-muted-foreground p-8">
-                      {searchSong ? "Nenhuma música encontrada." : "Todas as suas músicas já estão na playlist."}
+                      {searchSong ? "Nenhuma mï¿½sica encontrada." : "Todas as suas mï¿½sicas jï¿½ estï¿½o na playlist."}
                     </p>
                   ) : (
                     <div className="space-y-1">
@@ -208,9 +208,9 @@ const PlaylistDetail: React.FC = () => {
           {items.length === 0 ? (
             <div className="text-center py-12 bg-card/50 rounded-xl border border-dashed flex flex-col items-center">
               <Music className="w-12 h-12 text-muted-foreground mb-3 opacity-50" />
-              <p className="text-muted-foreground font-medium">Esta playlist está vazia.</p>
+              <p className="text-muted-foreground font-medium">Esta playlist estï¿½ vazia.</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
-                Adicione músicas da biblioteca para preencher a playlist.
+                Adicione mï¿½sicas da biblioteca para preencher a playlist.
               </p>
             </div>
           ) : (
@@ -235,7 +235,7 @@ const PlaylistDetail: React.FC = () => {
                       ) : (
                         <div className="flex items-center gap-2 text-destructive text-sm opacity-70">
                            <AlertCircle className="w-4 h-4" />
-                           <span>Música não encontrada (ID: {item.song_id})</span>
+                           <span>Mï¿½sica nï¿½o encontrada (ID: {item.song_id})</span>
                         </div>
                       )}
                     </div>
