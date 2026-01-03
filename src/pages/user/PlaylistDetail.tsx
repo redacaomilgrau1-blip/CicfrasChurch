@@ -116,7 +116,8 @@ const PlaylistDetail: React.FC = () => {
 
   const filteredAddSongs = allSongs
     .filter(s => !items.some(i => i.song_id === s.id))
-    .filter(s => s.title.toLowerCase().includes(searchSong.toLowerCase()));\r\n  const firstPlayableSong = items.find(item => item.song)?.song;\r\n
+    .filter(s => s.title.toLowerCase().includes(searchSong.toLowerCase()));
+  const firstPlayableSong = items.find(item => item.song)?.song;\r\n
 
   if (loading) {
     return (
