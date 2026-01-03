@@ -10,8 +10,9 @@ const CHORD_TOKEN_REGEX = /\b[A-G][#b]?(?:maj|min|m|sus|dim|aug|add)?[0-9]?(?:\/
 const CHORD_REGEX = new RegExp(CHORD_TOKEN_REGEX.source, 'g');
 
 export const parseLine = (line: string): ParsedLine => {
-  const trimmed = line.trim();
-  
+  const rawLine = line.replace(/\r$/, '');
+  const trimmed = rawLine.trim();
+
   if (!trimmed) {
     return { type: 'empty', content: '' };
   }
@@ -20,20 +21,20 @@ export const parseLine = (line: string): ParsedLine => {
     return { type: 'directive', content: trimmed };
   }
 
-  const chordMatches = Array.from(trimmed.matchAll(CHORD_REGEX));
-  
+  const chordMatches = Array.from(rawLine.matchAll(CHORD_REGEX));
+
   if (chordMatches.length === 0) {
-    return { type: 'lyric', content: trimmed, lyric: trimmed };
+    return { type: 'lyric', content: rawLine, lyric: rawLine };
   }
 
-  const hasNonChordContent = trimmed.replace(CHORD_REGEX, '').trim().length > 0;
+  const hasNonChordContent = rawLine.replace(CHORD_REGEX, '').trim().length > 0;
 
   if (chordMatches.length >= 2) {
     const chordPositions = chordMatches.map(match => ({
       chord: match[0],
       position: match.index || 0
     }));
-    return { type: 'chord', content: trimmed, chordPositions };
+    return { type: 'chord', content: rawLine, chordPositions };
   }
 
   if (!hasNonChordContent && chordMatches.length > 0) {
@@ -41,10 +42,10 @@ export const parseLine = (line: string): ParsedLine => {
       chord: match[0],
       position: match.index || 0
     }));
-    return { type: 'chord', content: trimmed, chordPositions };
+    return { type: 'chord', content: rawLine, chordPositions };
   }
 
-  return { type: 'lyric', content: trimmed, lyric: trimmed };
+  return { type: 'lyric', content: rawLine, lyric: rawLine };
 };
 
 export const parseContent = (content: string): ParsedLine[] => {
