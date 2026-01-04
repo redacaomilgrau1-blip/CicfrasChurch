@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save } from 'lucide-react';
 import { getSong, saveSong } from '@/lib/db';
+import { parseContent } from '@/lib/chordParser';
 import { Song } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -64,6 +65,73 @@ const SongEditor: React.FC = () => {
     });
 
     navigate('/admin');
+  };
+
+  const renderPreview = () => {
+    if (!content.trim()) return null;
+
+    const lines = parseContent(content);
+    const fontSize = 14;
+    const chordLineHeight = `${fontSize * 1.2}px`;
+
+    return lines.map((line, index) => {
+      if (line.type === 'empty') {
+        return <div key={index} className="h-4" />;
+      }
+
+      if (line.type === 'chord') {
+        return (
+          <div key={index} className="relative mb-0.5" style={{ height: chordLineHeight }}>
+            <div
+              className="absolute top-0 left-0 w-full whitespace-pre font-mono font-bold text-purple-700 dark:text-purple-400"
+              style={{ fontSize: `${fontSize}px` }}
+            >
+              {line.chordPositions?.map((cp, idx) => (
+                <span key={idx} className="absolute" style={{ left: `${cp.position}ch` }}>
+                  {cp.chord}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      if (line.type === 'lyric') {
+        return (
+          <div key={index} className="font-sans text-foreground mb-1 leading-snug" style={{ fontSize: `${fontSize}px` }}>
+            {line.lyric}
+          </div>
+        );
+      }
+
+      if (line.type === 'both') {
+        return (
+          <div key={index} className="mb-3 rounded px-[-4px] -mx-1">
+            <div className="relative" style={{ height: chordLineHeight }}>
+              <div
+                className="absolute bottom-[-2px] left-0 w-full whitespace-pre font-mono font-bold text-purple-700 dark:text-purple-400 z-10"
+                style={{ fontSize: `${fontSize}px` }}
+              >
+                {line.chordPositions?.map((cp, idx) => (
+                  <span key={idx} className="absolute" style={{ left: `${cp.position}ch` }}>
+                    {cp.chord}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="font-sans text-foreground leading-snug font-medium" style={{ fontSize: `${fontSize}px` }}>
+              {line.lyric}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div key={index} className="text-muted-foreground italic text-xs mb-2 mt-2 font-semibold">
+          {line.content}
+        </div>
+      );
+    });
   };
 
   return (
@@ -148,6 +216,16 @@ const SongEditor: React.FC = () => {
                 className="w-full px-3 py-2 bg-card border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm leading-relaxed"
               />
             </div>
+
+            <div className="bg-card/70 rounded-lg p-3 border border-border">
+              <div className="text-xs font-semibold text-muted-foreground mb-2">
+                Previa de visualizacao
+              </div>
+              <div className="text-foreground">
+                {renderPreview()}
+              </div>
+            </div>
+
 
             <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground border border-border">
               <h3 className="font-semibold mb-1">Dicas de Formatação:</h3>
