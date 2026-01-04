@@ -111,7 +111,7 @@ const SongViewer: React.FC = () => {
 
       if (line.type === 'lyric') {
         return (
-          <div key={index} className="font-sans text-foreground mb-1 leading-snug" style={{ fontSize: `${fontSize}px` }}>
+          <div key={index} className="font-mono whitespace-pre text-foreground mb-1 leading-snug" style={{ fontSize: `${fontSize}px` }}>
             {line.lyric}
           </div>
         );
@@ -135,7 +135,7 @@ const SongViewer: React.FC = () => {
                 })}
               </div>
             </div>
-            <div className="font-sans text-foreground leading-snug font-medium" style={{ fontSize: `${fontSize}px` }}>
+            <div className="font-mono whitespace-pre text-foreground leading-snug font-medium" style={{ fontSize: `${fontSize}px` }}>
               {line.lyric}
             </div>
           </div>
