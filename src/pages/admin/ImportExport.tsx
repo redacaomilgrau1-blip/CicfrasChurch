@@ -42,8 +42,8 @@ const ImportExport: React.FC = () => {
     URL.revokeObjectURL(url);
 
     toast({
-      title: 'Exportação concluída',
-      description: `${songs.length} músicas exportadas para JSON.`,
+      title: 'Exportaï¿½ï¿½o concluï¿½da',
+      description: `${songs.length} mï¿½sicas exportadas para JSON.`,
     });
   };
 
@@ -65,31 +65,31 @@ const ImportExport: React.FC = () => {
     URL.revokeObjectURL(url);
 
     toast({
-      title: 'Exportação concluída',
-      description: `${songs.length} músicas exportadas para ChordPro.`,
+      title: 'Exportaï¿½ï¿½o concluï¿½da',
+      description: `${songs.length} mï¿½sicas exportadas para ChordPro.`,
     });
   };
 
   const handleDownloadTemplate = () => {
-    const templateContent = `{title: Exemplo de Música 1}
+    const templateContent = `{title: Exemplo de Mï¿½sica 1}
 {artist: Banda Teste}
 {key: C}
 
 C              G
-Esta é a primeira linha da música
+Esta ï¿½ a primeira linha da mï¿½sica
 Am             F
-Esta é a segunda linha
+Esta ï¿½ a segunda linha
 
 ---
 
-{title: Exemplo de Música 2}
+{title: Exemplo de Mï¿½sica 2}
 {artist: Cantor Teste}
 {key: G}
 
 G              D
-Outra música começa aqui
+Outra mï¿½sica comeï¿½a aqui
 Em             C
-Separada por três traços`;
+Separada por trï¿½s traï¿½os`;
 
     const blob = new Blob([templateContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -98,7 +98,7 @@ Separada por três traços`;
     a.download = 'modelo-importacao.txt';
     a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Modelo baixado", description: "Use este arquivo como guia para importar suas músicas." });
+    toast({ title: "Modelo baixado", description: "Use este arquivo como guia para importar suas mï¿½sicas." });
   };
 
   const handleImportJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,14 +117,14 @@ Separada por três traços`;
         }
 
         toast({
-          title: 'Importação concluída',
-          description: `${songs.length} músicas importadas do JSON.`,
+          title: 'Importaï¿½ï¿½o concluï¿½da',
+          description: `${songs.length} mï¿½sicas importadas do JSON.`,
         });
 
       } catch (error) {
         toast({
-          title: 'Falha na importação',
-          description: 'Formato de arquivo JSON inválido.',
+          title: 'Falha na importaï¿½ï¿½o',
+          description: 'Formato de arquivo JSON invï¿½lido.',
           variant: 'destructive',
         });
       } finally {
@@ -197,12 +197,12 @@ Separada por três traços`;
 
         if (importedCount > 0) {
           toast({
-            title: 'Importação concluída',
-            description: `${importedCount} músicas adicionadas à biblioteca. ${failCount > 0 ? `(${failCount} falharam)` : ''}`,
+            title: 'Importaï¿½ï¿½o concluï¿½da',
+            description: `${importedCount} mï¿½sicas adicionadas ï¿½ biblioteca. ${failCount > 0 ? `(${failCount} falharam)` : ''}`,
           });
         } else {
           toast({
-            title: 'Nenhuma música importada',
+            title: 'Nenhuma mï¿½sica importada',
             description: 'Verifique o formato do arquivo (use o modelo).',
             variant: 'destructive',
           });
@@ -211,7 +211,7 @@ Separada por três traços`;
       } catch (error) {
         console.error(error);
         toast({
-          title: 'Falha na importação',
+          title: 'Falha na importaï¿½ï¿½o',
           description: 'Erro ao ler o arquivo.',
           variant: 'destructive',
         });
@@ -238,11 +238,11 @@ Separada por três traços`;
   };
 
   const handleClearAll = async () => {
-    if (window.confirm('Tem certeza que deseja apagar TODAS as músicas? Isso não pode ser desfeito!')) {
+    if (window.confirm('Tem certeza que deseja apagar TODAS as mï¿½sicas? Isso nï¿½o pode ser desfeito!')) {
       await clearAllData();
       toast({
         title: 'Dados apagados',
-        description: 'Todas as músicas foram removidas.',
+        description: 'Todas as mï¿½sicas foram removidas.',
       });
     }
   };
@@ -308,7 +308,7 @@ Separada por três traços`;
                   <h3 className="font-semibold mb-2 flex items-center gap-2">
                     <Music className="w-4 h-4 text-green-500" /> ChordPro
                   </h3>
-                  <p className="text-xs text-muted-foreground mb-4">Formato compatível com outros apps de música.</p>
+                  <p className="text-xs text-muted-foreground mb-4">Formato compatÃ­vel com outros apps de mÃºsica.</p>
                   <Button onClick={handleExportChordPro} variant="outline" size="sm" className="w-full">
                     Baixar ChordPro
                   </Button>
@@ -344,8 +344,8 @@ Separada por três traços`;
                   </Button>
                </div>
                <div className="p-4 rounded-lg border border-border bg-card">
-                  <h3 className="font-semibold mb-2">Lista de Músicas (.txt/.cho)</h3>
-                  <p className="text-xs text-muted-foreground mb-4">Importe várias músicas separadas por "---".</p>
+                  <h3 className="font-semibold mb-2">Lista de MÃºsicas (.txt/.cho)</h3>
+                  <p className="text-xs text-muted-foreground mb-4">Importe vÃ¡rias mÃºsicas separadas por "---".</p>
                   <Button 
                     variant="secondary" 
                     size="sm" 
@@ -407,7 +407,7 @@ Separada por três traços`;
             </h2>
             <div className="p-4 rounded-lg border border-destructive/20 bg-destructive/5">
               <p className="text-sm text-muted-foreground mb-4">
-                Esta ação apagará permanentemente todas as músicas do banco de dados local.
+                Esta aï¿½ï¿½o apagarï¿½ permanentemente todas as mï¿½sicas do banco de dados local.
               </p>
               <Button onClick={handleClearAll} variant="destructive" size="sm">
                 Apagar Tudo

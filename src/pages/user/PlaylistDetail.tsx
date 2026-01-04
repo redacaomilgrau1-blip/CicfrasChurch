@@ -83,7 +83,7 @@ const PlaylistDetail: React.FC = () => {
     if (success) {
       setItems(prev => prev.filter(i => i.id !== itemId));
     } else {
-      toast({ title: "Erro ao remover m�sica", variant: "destructive" });
+      toast({ title: "Erro ao remover música", variant: "destructive" });
     }
   };
 
@@ -94,10 +94,10 @@ const PlaylistDetail: React.FC = () => {
     if (newItem) {
       // Optimistically update list
       setItems(current => [...current, { ...newItem, song: songData }]);
-      toast({ title: "M�sica adicionada" });
+      toast({ title: "Música adicionada" });
       setIsAddOpen(false);
     } else {
-      toast({ title: "Erro ao adicionar", description: "Verifique sua conex�o.", variant: "destructive" });
+      toast({ title: "Erro ao adicionar", description: "Verifique sua conexão.", variant: "destructive" });
     }
   };
 
@@ -181,7 +181,7 @@ const PlaylistDetail: React.FC = () => {
                 <div className="overflow-y-auto flex-1 border rounded-md p-1 min-h-[200px]">
                   {filteredAddSongs.length === 0 ? (
                     <p className="text-center text-sm text-muted-foreground p-8">
-                      {searchSong ? "Nenhuma m�sica encontrada." : "Todas as suas m�sicas j� est�o na playlist."}
+                      {searchSong ? "Nenhuma música encontrada." : "Todas as suas músicas já estão na playlist."}
                     </p>
                   ) : (
                     <div className="space-y-1">
@@ -209,9 +209,9 @@ const PlaylistDetail: React.FC = () => {
           {items.length === 0 ? (
             <div className="text-center py-12 bg-card/50 rounded-xl border border-dashed flex flex-col items-center">
               <Music className="w-12 h-12 text-muted-foreground mb-3 opacity-50" />
-              <p className="text-muted-foreground font-medium">Esta playlist est� vazia.</p>
+              <p className="text-muted-foreground font-medium">Esta playlist está vazia.</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
-                Adicione m�sicas da biblioteca para preencher a playlist.
+                Adicione músicas da biblioteca para preencher a playlist.
               </p>
             </div>
           ) : (
