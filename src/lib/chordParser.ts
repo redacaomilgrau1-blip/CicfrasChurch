@@ -6,7 +6,7 @@ export interface ParsedLine {
   lyric?: string;
 }
 
-const CHORD_TOKEN_REGEX = /\b[A-G][#b]?(?:maj|min|m|sus|dim|aug|add)?[0-9]?(?:\/[A-G][#b]?)?\b/;
+const CHORD_TOKEN_REGEX = /\b[A-G][#b]?(?:maj|min|m|sus|dim|aug|add)?[0-9]?(?:\/[A-G][#b]?)?(?![A-Za-z0-9_])/;
 const CHORD_REGEX = new RegExp(CHORD_TOKEN_REGEX.source, 'g');
 
 export const parseLine = (line: string): ParsedLine => {
