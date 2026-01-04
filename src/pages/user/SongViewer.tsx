@@ -269,6 +269,11 @@ const SongViewer: React.FC = () => {
                 {useTwoColumns ? '2 Col' : '1 Col'}
               </Button>
             </div>
+            {useTwoColumns && (
+              <p className="mt-2 text-center text-xs italic text-muted-foreground">
+                Se uma coluna estiver sobrepondo a outra, ajuste o tamanho da fonte.
+              </p>
+            )}
           </div>
         </nav>
 
