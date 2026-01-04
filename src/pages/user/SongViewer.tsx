@@ -279,7 +279,7 @@ const SongViewer: React.FC = () => {
             className="select-text"
           >
             {useTwoColumns ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-[15px]">
                 <div>{renderLines(leftLines, 0)}</div>
                 <div>{renderLines(rightLines, splitIndex)}</div>
               </div>
