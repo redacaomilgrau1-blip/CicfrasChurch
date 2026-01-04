@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@ import { ArrowLeft, ChevronUp, ChevronDown, Music, Type, SkipForward, SkipBack, 
 import { getSong, addRecentSong } from '@/lib/db';
 import { getPlaylistItems, getPlaylist } from '@/lib/playlistService';
 import { transposeChord, getKeySignature, AccidentalPreference } from '@/lib/chordTransposer';
-import { parseContent } from '@/lib/chordParser';
+import { parseContent, ParsedLine } from '@/lib/chordParser';
 import { getDisplayTitle } from '@/lib/songTitle';
 import { Song, PlaylistItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ const SongViewer: React.FC = () => {
   const [transpose, setTranspose] = useState(0);
   const [accidentalPref, setAccidentalPref] = useState<AccidentalPreference>('sharps');
   const [fontSize, setFontSize] = useState(16);
+  const [useTwoColumns, setUseTwoColumns] = useState(false);
   
   // Playlist Context State
   const [nextSongId, setNextSongId] = useState<string | null>(null);
@@ -77,23 +78,84 @@ const SongViewer: React.FC = () => {
   const increaseFont = () => setFontSize(prev => Math.min(prev + 2, 24));
   const decreaseFont = () => setFontSize(prev => Math.max(prev - 2, 12));
 
-  const renderContent = () => {
-    if (!song) return null;
+  const parsedLines = useMemo(() => {
+    if (!song) return [];
+    return parseContent(song.content);
+  }, [song]);
 
-    const lines = parseContent(song.content);
+  const lyricLineCount = useMemo(() => {
+    return parsedLines.filter(line => line.type === 'lyric' || line.type === 'both').length;
+  }, [parsedLines]);
 
-    return lines.map((line, index) => {
-      const chordLineHeight = `${fontSize * 1.2}px`;
+  const shouldUseTwoColumns = lyricLineCount > 10;
 
-      if (line.type === 'empty') {
-        return <div key={index} className="h-4" />; 
+  useEffect(() => {
+    setUseTwoColumns(shouldUseTwoColumns);
+  }, [shouldUseTwoColumns, song?.id]);
+
+  const findSplitIndex = (lines: ParsedLine[]) => {
+    if (lines.length < 2) return lines.length;
+    const target = Math.ceil(lines.length / 2);
+    let offset = 0;
+    while (target - offset > 1 || target + offset < lines.length - 1) {
+      const leftIndex = target - offset;
+      const rightIndex = target + offset;
+      if (leftIndex > 0 && (lines[leftIndex].type === 'empty' || lines[leftIndex].type === 'directive')) {
+        return leftIndex + 1;
       }
+      if (rightIndex < lines.length && (lines[rightIndex].type === 'empty' || lines[rightIndex].type === 'directive')) {
+        return rightIndex + 1;
+      }
+      offset += 1;
+    }
+    return target;
+  };
 
-      if (line.type === 'chord') {
-        return (
-          <div key={index} className="relative mb-0.5" style={{ height: chordLineHeight }}>
-            <div 
-              className="absolute top-0 left-0 w-full whitespace-pre font-mono font-bold text-purple-700 dark:text-purple-400"
+  const splitIndex = useMemo(() => findSplitIndex(parsedLines), [parsedLines]);
+  const leftLines = useMemo(() => parsedLines.slice(0, splitIndex), [parsedLines, splitIndex]);
+  const rightLines = useMemo(() => parsedLines.slice(splitIndex), [parsedLines, splitIndex]);
+
+  const renderLine = (line: ParsedLine, index: number) => {
+    const chordLineHeight = `${fontSize * 1.2}px`;
+
+    if (line.type === 'empty') {
+      return <div key={index} className="h-4" />;
+    }
+
+    if (line.type === 'chord') {
+      return (
+        <div key={index} className="relative mb-0.5" style={{ height: chordLineHeight }}>
+          <div
+            className="absolute top-0 left-0 w-full whitespace-pre font-mono font-bold text-purple-700 dark:text-purple-400"
+            style={{ fontSize: `${fontSize}px` }}
+          >
+            {line.chordPositions?.map((cp, idx) => {
+              const transposedChord = transposeChord(cp.chord, transpose, accidentalPref);
+              return (
+                <span key={idx} className="absolute" style={{ left: `${cp.position}ch` }}>
+                  {transposedChord}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    if (line.type === 'lyric') {
+      return (
+        <div key={index} className="font-mono whitespace-pre text-foreground mb-1 leading-snug" style={{ fontSize: `${fontSize}px` }}>
+          {line.lyric}
+        </div>
+      );
+    }
+
+    if (line.type === 'both') {
+      return (
+        <div key={index} className="mb-3 group hover:bg-accent/10 rounded px-[-4px] -mx-1 transition-colors">
+          <div className="relative" style={{ height: chordLineHeight }}>
+            <div
+              className="absolute bottom-[-2px] left-0 w-full whitespace-pre font-mono font-bold text-purple-700 dark:text-purple-400 z-10"
               style={{ fontSize: `${fontSize}px` }}
             >
               {line.chordPositions?.map((cp, idx) => {
@@ -106,48 +168,22 @@ const SongViewer: React.FC = () => {
               })}
             </div>
           </div>
-        );
-      }
-
-      if (line.type === 'lyric') {
-        return (
-          <div key={index} className="font-mono whitespace-pre text-foreground mb-1 leading-snug" style={{ fontSize: `${fontSize}px` }}>
+          <div className="font-mono whitespace-pre text-foreground leading-snug font-medium" style={{ fontSize: `${fontSize}px` }}>
             {line.lyric}
           </div>
-        );
-      }
-
-      if (line.type === 'both') {
-        return (
-          <div key={index} className="mb-3 group hover:bg-accent/10 rounded px-[-4px] -mx-1 transition-colors">
-            <div className="relative" style={{ height: chordLineHeight }}>
-              <div 
-                className="absolute bottom-[-2px] left-0 w-full whitespace-pre font-mono font-bold text-purple-700 dark:text-purple-400 z-10"
-                style={{ fontSize: `${fontSize}px` }}
-              >
-                {line.chordPositions?.map((cp, idx) => {
-                  const transposedChord = transposeChord(cp.chord, transpose, accidentalPref);
-                  return (
-                    <span key={idx} className="absolute" style={{ left: `${cp.position}ch` }}>
-                      {transposedChord}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="font-mono whitespace-pre text-foreground leading-snug font-medium" style={{ fontSize: `${fontSize}px` }}>
-              {line.lyric}
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div key={index} className="text-muted-foreground italic text-xs mb-2 mt-2 font-semibold">
-          {line.content}
         </div>
       );
-    });
+    }
+
+    return (
+      <div key={index} className="text-muted-foreground italic text-xs mb-2 mt-2 font-semibold">
+        {line.content}
+      </div>
+    );
+  };
+
+  const renderLines = (lines: ParsedLine[], offset: number) => {
+    return lines.map((line, index) => renderLine(line, offset + index));
   };
 
   if (!song) {
@@ -221,6 +257,17 @@ const SongViewer: React.FC = () => {
               <Button variant="ghost" size="sm" onClick={toggleAccidentalPreference} className="text-xs h-8 px-2">
                 {accidentalPref === 'sharps' ? 'T#' : 'Tb'}
               </Button>
+
+              <div className="h-6 w-px bg-border mx-1"></div>
+
+              <Button
+                variant={useTwoColumns ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUseTwoColumns(prev => !prev)}
+                className={useTwoColumns ? 'bg-purple-600 hover:bg-purple-700 text-white' : ''}
+              >
+                {useTwoColumns ? '2 Col' : '1 Col'}
+              </Button>
             </div>
           </div>
         </nav>
@@ -231,7 +278,14 @@ const SongViewer: React.FC = () => {
             animate={{ opacity: 1 }}
             className="select-text"
           >
-            {renderContent()}
+            {useTwoColumns ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>{renderLines(leftLines, 0)}</div>
+                <div>{renderLines(rightLines, splitIndex)}</div>
+              </div>
+            ) : (
+              renderLines(parsedLines, 0)
+            )}
           </motion.div>
         </div>
 
@@ -270,3 +324,8 @@ const SongViewer: React.FC = () => {
 };
 
 export default SongViewer;
+
+
+
+
+
