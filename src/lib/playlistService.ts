@@ -3,12 +3,49 @@ import { supabase } from './customSupabaseClient';
 import { Playlist, PlaylistItem, Song } from '@/types';
 import { upsertSongInSupabase } from '@/lib/songService';
 
+const LOCAL_PLAYLISTS_KEY = 'local_playlists';
+const LOCAL_PLAYLIST_ITEMS_KEY = 'local_playlist_items';
+
+const loadLocalPlaylists = (): Playlist[] => {
+  try {
+    const raw = localStorage.getItem(LOCAL_PLAYLISTS_KEY);
+    return raw ? (JSON.parse(raw) as Playlist[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveLocalPlaylists = (playlists: Playlist[]): void => {
+  localStorage.setItem(LOCAL_PLAYLISTS_KEY, JSON.stringify(playlists));
+};
+
+const loadLocalPlaylistItems = (): PlaylistItem[] => {
+  try {
+    const raw = localStorage.getItem(LOCAL_PLAYLIST_ITEMS_KEY);
+    return raw ? (JSON.parse(raw) as PlaylistItem[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveLocalPlaylistItems = (items: PlaylistItem[]): void => {
+  localStorage.setItem(LOCAL_PLAYLIST_ITEMS_KEY, JSON.stringify(items));
+};
+
 // Playlist CRUD
 export async function createPlaylist(name: string): Promise<Playlist | null> {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) {
     console.error('Error fetching user for playlist:', userError);
-    return null;
+    const playlists = loadLocalPlaylists();
+    const now = new Date().toISOString();
+    const playlist: Playlist = {
+      id: `playlist-${Date.now()}`,
+      name,
+      created_at: now
+    };
+    saveLocalPlaylists([playlist, ...playlists]);
+    return playlist;
   }
 
   const { data, error } = await supabase
@@ -25,6 +62,11 @@ export async function createPlaylist(name: string): Promise<Playlist | null> {
 }
 
 export async function getPlaylists(): Promise<Playlist[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return loadLocalPlaylists();
+  }
+
   const { data, error } = await supabase
     .from('playlists')
     .select('*')
@@ -38,6 +80,15 @@ export async function getPlaylists(): Promise<Playlist[]> {
 }
 
 export async function deletePlaylist(id: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const playlists = loadLocalPlaylists().filter(p => p.id !== id);
+    const items = loadLocalPlaylistItems().filter(item => item.playlist_id !== id);
+    saveLocalPlaylists(playlists);
+    saveLocalPlaylistItems(items);
+    return true;
+  }
+
   const { error } = await supabase
     .from('playlists')
     .delete()
@@ -51,18 +102,31 @@ export async function deletePlaylist(id: string): Promise<boolean> {
 }
 
 export async function getPlaylist(id: string): Promise<Playlist | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const playlists = loadLocalPlaylists();
+    return playlists.find(p => p.id === id) || null;
+  }
+
   const { data, error } = await supabase
     .from('playlists')
     .select('*')
     .eq('id', id)
     .single();
-    
+
   if (error) return null;
   return data;
 }
 
 // Playlist Items CRUD
 export async function getPlaylistItems(playlistId: string): Promise<PlaylistItem[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return loadLocalPlaylistItems()
+      .filter(item => item.playlist_id === playlistId)
+      .sort((a, b) => a.position - b.position);
+  }
+
   const { data, error } = await supabase
     .from('playlist_items')
     .select('*')
@@ -84,6 +148,22 @@ export async function addSongToPlaylist(
   try {
     if (song) {
       await upsertSongInSupabase(song);
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const items = loadLocalPlaylistItems();
+      const currentItems = items.filter(item => item.playlist_id === playlistId);
+      const maxPos = currentItems.reduce((max, item) => Math.max(max, item.position), -1);
+      const nextPos = maxPos + 1;
+      const newItem: PlaylistItem = {
+        id: `pli-${Date.now()}`,
+        playlist_id: playlistId,
+        song_id: songId,
+        position: nextPos
+      };
+      saveLocalPlaylistItems([...items, newItem]);
+      return newItem;
     }
 
     // Get current max position to append to the end
@@ -116,6 +196,13 @@ export async function addSongToPlaylist(
 }
 
 export async function removePlaylistItem(itemId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const items = loadLocalPlaylistItems().filter(item => item.id !== itemId);
+    saveLocalPlaylistItems(items);
+    return true;
+  }
+
   const { error } = await supabase
     .from('playlist_items')
     .delete()
@@ -126,6 +213,21 @@ export async function removePlaylistItem(itemId: string): Promise<boolean> {
 
 export async function updatePlaylistOrder(items: PlaylistItem[]): Promise<boolean> {
   if (items.length === 0) return true;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const existing = loadLocalPlaylistItems();
+    const ordered = items.map((item, index) => ({
+      ...item,
+      position: index
+    }));
+    const updated = existing.map(item => {
+      const match = ordered.find(updatedItem => updatedItem.id === item.id);
+      return match ? match : item;
+    });
+    saveLocalPlaylistItems(updated);
+    return true;
+  }
 
   const updates = items.map((item, index) => ({
     id: item.id,
