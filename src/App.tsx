@@ -12,7 +12,7 @@ import AdminHome from '@/pages/admin/AdminHome';
 import SongEditor from '@/pages/admin/SongEditor';
 import ImportExport from '@/pages/admin/ImportExport';
 import Settings from '@/pages/admin/Settings';
-import { initDB, syncLocalSongsToSupabase } from '@/lib/db';
+import { initDB } from '@/lib/db';
 import { seedExampleSongs } from '@/lib/seedData';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
 
@@ -22,7 +22,6 @@ function App() {
       try {
         await initDB();
         await seedExampleSongs();
-        await syncLocalSongsToSupabase();
       } catch (error) {
         console.error("Failed to initialize DB:", error);
       }

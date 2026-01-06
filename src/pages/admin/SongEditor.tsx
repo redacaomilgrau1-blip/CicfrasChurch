@@ -14,6 +14,7 @@ const SongEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [loadedSong, setLoadedSong] = useState<Song | null>(null);
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [key, setKey] = useState('');
@@ -29,6 +30,7 @@ const SongEditor: React.FC = () => {
   const loadSong = async (songId: string) => {
     const song = await getSong(songId);
     if (song) {
+      setLoadedSong(song);
       setTitle(song.title);
       setArtist(song.artist || '');
       setKey(song.key || '');
@@ -40,7 +42,25 @@ const SongEditor: React.FC = () => {
     if (!title.trim()) {
       toast({
         title: 'Erro',
-        description: 'Por favor, insira o tÃ­tulo da mÃºsica.',
+        description: 'Por favor, insira o tÇðtulo da mÇ§sica.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isEditing && !id) {
+      toast({
+        title: 'Erro',
+        description: 'NÆo foi poss¡vel identificar a m£sica para atualizar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isEditing && !loadedSong) {
+      toast({
+        title: 'Erro',
+        description: 'N?o foi poss?vel carregar a m?sica para atualizar.',
         variant: 'destructive',
       });
       return;
@@ -53,20 +73,19 @@ const SongEditor: React.FC = () => {
       artist: artist.trim() || undefined,
       key: key.trim() || undefined,
       content: content.trim(),
-      createdAt: id ? (await getSong(id))?.createdAt || now : now,
+      createdAt: loadedSong?.createdAt || now,
       updatedAt: now,
     };
 
     await saveSong(song);
 
     toast({
-      title: isEditing ? 'MÃºsica atualizada' : 'MÃºsica criada',
+      title: isEditing ? 'MÇ§sica atualizada' : 'MÇ§sica criada',
       description: `"${song.title}" foi salva com sucesso.`,
     });
 
     navigate('/admin');
   };
-
   const renderPreview = () => {
     if (!content.trim()) return null;
 
@@ -152,7 +171,7 @@ const SongEditor: React.FC = () => {
             </h1>
             <Button onClick={handleSave} size="sm" className="bg-purple-600 hover:bg-purple-700">
               <Save className="w-4 h-4 mr-2" />
-              Salvar
+              {isEditing ? 'Atualizar' : 'Salvar'}
             </Button>
           </div>
         </nav>
