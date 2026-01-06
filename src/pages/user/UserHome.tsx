@@ -49,6 +49,10 @@ const UserHome: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     let result = normalizedQuery
       ? songs.filter(song =>
