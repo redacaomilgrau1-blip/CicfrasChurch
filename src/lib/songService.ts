@@ -7,6 +7,8 @@ const buildSongPayload = (song: Song) => ({
   artist: song.artist ?? null,
   key: song.key ?? null,
   content: song.content,
+  created_at: song.createdAt,
+  updated_at: song.updatedAt,
 });
 
 const mapSupabaseSong = (row: {
@@ -15,6 +17,8 @@ const mapSupabaseSong = (row: {
   artist: string | null;
   key: string | null;
   content: string;
+  created_at?: number | null;
+  updated_at?: number | null;
 }): Song => {
   const now = Date.now();
   return {
@@ -23,8 +27,8 @@ const mapSupabaseSong = (row: {
     artist: row.artist ?? undefined,
     key: row.key ?? undefined,
     content: row.content,
-    createdAt: now,
-    updatedAt: now,
+    createdAt: row.created_at ?? now,
+    updatedAt: row.updated_at ?? now,
   };
 };
 
@@ -47,7 +51,7 @@ export const fetchSongsFromSupabase = async (): Promise<Song[]> => {
   try {
     const { data, error } = await supabase
       .from('songs')
-      .select('id,title,artist,key,content');
+      .select('id,title,artist,key,content,created_at,updated_at');
 
     if (error) {
       console.error('Error fetching songs from Supabase:', error);
@@ -65,7 +69,7 @@ export const fetchSongFromSupabase = async (id: string): Promise<Song | null> =>
   try {
     const { data, error } = await supabase
       .from('songs')
-      .select('id,title,artist,key,content')
+      .select('id,title,artist,key,content,created_at,updated_at')
       .eq('id', id)
       .single();
 

@@ -22,9 +22,16 @@ const ImportExport: React.FC = () => {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importCategory, setImportCategory] = useState<'Louvor' | 'Hino'>('Louvor');
-   const normalizeSongKey = (title: string, artist: string, content: string) => (
+  const normalizeSongKey = (title: string, artist: string, content: string) => (
     `${title.trim().toLowerCase()}|${artist.trim().toLowerCase()}|${content.trim().toLowerCase()}`
   );
+  const buildDeterministicId = (normalizedKey: string) => {
+    let hash = 0;
+    for (let i = 0; i < normalizedKey.length; i++) {
+      hash = (hash * 31 + normalizedKey.charCodeAt(i)) >>> 0;
+    }
+    return `song-${hash.toString(16)}`;
+  };
 
   // Refs for hidden file inputs
   const jsonInputRef = useRef<HTMLInputElement>(null);
@@ -32,7 +39,12 @@ const ImportExport: React.FC = () => {
 
   const handleExportJSON = async () => {
     const songs = await getAllSongs();
-    const dataStr = JSON.stringify(songs, null, 2);
+    const exportSongs = songs.map(song => ({
+      ...song,
+      created_at: song.createdAt,
+      updated_at: song.updatedAt,
+    }));
+    const dataStr = JSON.stringify(exportSongs, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -110,9 +122,28 @@ Separada por tr�s tra�os`;
       try {
         setImporting(true);
         const content = e.target?.result as string;
-        const songs = JSON.parse(content) as Song[];
+        const songs = JSON.parse(content) as Array<Song & { created_at?: number; updated_at?: number }>;
 
-        for (const song of songs) {
+        const now = Date.now();
+        for (const rawSong of songs) {
+          const createdAt = rawSong.createdAt ?? rawSong.created_at ?? now;
+          const updatedAt = rawSong.updatedAt ?? rawSong.updated_at ?? createdAt;
+          const title = (rawSong.title || '').toString();
+          const artist = (rawSong.artist || '').toString();
+          const contentText = (rawSong.content || '').toString();
+          const dedupeKey = normalizeSongKey(title, artist, contentText);
+          const id = rawSong.id || buildDeterministicId(dedupeKey);
+          const song: Song = {
+            ...rawSong,
+            id,
+            title,
+            artist: artist.trim() || undefined,
+            key: rawSong.key ? rawSong.key.toString().trim() : undefined,
+            content: contentText,
+            createdAt,
+            updatedAt,
+          };
+
           await saveSong(song);
         }
 
@@ -160,8 +191,6 @@ Separada por tr�s tra�os`;
           if (parsed.title && parsed.content) {
             try {
               const now = Date.now();
-              // Create a unique ID to ensure no collisions during bulk import
-                            const uniqueId = `song-${now}-${Math.random().toString(36).substr(2, 6)}`;
               const title = prefixLower && !parsed.title.toLowerCase().startsWith(prefixLower)
                 ? `${prefix} ${parsed.title}`
                 : parsed.title;
@@ -172,6 +201,7 @@ Separada por tr�s tra�os`;
                 continue;
               }
               existingKeys.add(dedupeKey);
+              const uniqueId = buildDeterministicId(dedupeKey);
               
               const song: Song = {
                 id: uniqueId,

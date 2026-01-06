@@ -19,6 +19,7 @@ const SongEditor: React.FC = () => {
   const [artist, setArtist] = useState('');
   const [key, setKey] = useState('');
   const [content, setContent] = useState('');
+  const [category, setCategory] = useState<'Louvor' | 'Hino' | ''>('');
   const isEditing = !!id;
 
   useEffect(() => {
@@ -31,6 +32,8 @@ const SongEditor: React.FC = () => {
     const song = await getSong(songId);
     if (song) {
       setLoadedSong(song);
+      const normalizedTitle = song.title.trim().toLowerCase();
+      setCategory(normalizedTitle.startsWith('hino') || normalizedTitle.startsWith('hinos') ? 'Hino' : 'Louvor');
       setTitle(song.title);
       setArtist(song.artist || '');
       setKey(song.key || '');
@@ -43,6 +46,15 @@ const SongEditor: React.FC = () => {
       toast({
         title: 'Erro',
         description: 'Por favor, insira o tÇðtulo da mÇ§sica.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!category) {
+      toast({
+        title: 'Erro',
+        description: 'Selecione a categoria da m?sica.',
         variant: 'destructive',
       });
       return;
@@ -66,10 +78,18 @@ const SongEditor: React.FC = () => {
       return;
     }
 
+    const normalizedTitle = title.trim();
+    const needsHinoPrefix = category === 'Hino';
+    const hasHinoPrefix = normalizedTitle.toLowerCase().startsWith('hino') || normalizedTitle.toLowerCase().startsWith('hinos');
+    const cleanedTitle = hasHinoPrefix
+      ? normalizedTitle.replace(/^(hinos?)\s*[-:\u2013]?\s*/i, '')
+      : normalizedTitle;
+    const finalTitle = needsHinoPrefix ? `Hino ${cleanedTitle}` : cleanedTitle;
+
     const now = Date.now();
     const song: Song = {
       id: id || `song-${now}`,
-      title: title.trim(),
+      title: finalTitle,
       artist: artist.trim() || undefined,
       key: key.trim() || undefined,
       content: content.trim(),
@@ -198,6 +218,29 @@ const SongEditor: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Categoria
+                </label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={category === 'Louvor' ? 'default' : 'outline'}
+                    onClick={() => setCategory('Louvor')}
+                    className="flex-1"
+                  >
+                    Louvor
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={category === 'Hino' ? 'default' : 'outline'}
+                    onClick={() => setCategory('Hino')}
+                    className="flex-1"
+                  >
+                    Hino
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                   Artista
                 </label>
                 <input
@@ -222,7 +265,6 @@ const SongEditor: React.FC = () => {
                 />
               </div>
             </div>
-
             <div className="flex-1">
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
                 Cifra e Letra
