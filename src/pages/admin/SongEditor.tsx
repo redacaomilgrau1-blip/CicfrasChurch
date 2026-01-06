@@ -45,7 +45,7 @@ const SongEditor: React.FC = () => {
     if (!title.trim()) {
       toast({
         title: 'Erro',
-        description: 'Por favor, insira o tÇðtulo da mÇ§sica.',
+        description: 'Por favor, insira o tÃ­tulo da mÃºsica.',
         variant: 'destructive',
       });
       return;
@@ -63,7 +63,7 @@ const SongEditor: React.FC = () => {
     if (isEditing && !id) {
       toast({
         title: 'Erro',
-        description: 'NÆo foi poss¡vel identificar a m£sica para atualizar.',
+        description: 'Nï¿½o foi possï¿½vel identificar a mï¿½sica para atualizar.',
         variant: 'destructive',
       });
       return;
@@ -100,7 +100,7 @@ const SongEditor: React.FC = () => {
     await saveSong(song);
 
     toast({
-      title: isEditing ? 'MÇ§sica atualizada' : 'MÇ§sica criada',
+      title: isEditing ? 'MÃºsica atualizada' : 'MÃºsica criada',
       description: `"${song.title}" foi salva com sucesso.`,
     });
 
