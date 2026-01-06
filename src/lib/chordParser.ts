@@ -29,14 +29,6 @@ export const parseLine = (line: string): ParsedLine => {
 
   const hasNonChordContent = rawLine.replace(CHORD_REGEX, '').trim().length > 0;
 
-  if (chordMatches.length >= 2) {
-    const chordPositions = chordMatches.map(match => ({
-      chord: match[0],
-      position: match.index || 0
-    }));
-    return { type: 'chord', content: rawLine, chordPositions };
-  }
-
   if (!hasNonChordContent && chordMatches.length > 0) {
     const chordPositions = chordMatches.map(match => ({
       chord: match[0],
