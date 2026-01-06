@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Clock, Music, Settings, Filter, Calendar, Type, ListMusic, Plus, Trash2, ChevronUp } from 'lucide-react';
 import { getAllSongs, getRecentSongs } from '@/lib/db';
 import { createPlaylist, getPlaylists, deletePlaylist } from '@/lib/playlistService';
-import { searchSongs, sortSongs } from '@/lib/search';
+import { sortSongs } from '@/lib/search';
 import { getDisplayTitle } from '@/lib/songTitle';
 import { Song, Playlist } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -49,11 +49,13 @@ const UserHome: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    let result = searchSongs(songs, searchQuery);
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    let result = normalizedQuery
+      ? songs.filter(song =>
+          song.title.toLowerCase().includes(normalizedQuery) ||
+          (song.artist || '').toLowerCase().includes(normalizedQuery)
+        )
+      : songs;
     result = sortSongs(result, sortOrder);
     setFilteredSongs(result);
     setCurrentPage(1);
