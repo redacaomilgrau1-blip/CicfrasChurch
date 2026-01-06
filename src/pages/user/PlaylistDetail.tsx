@@ -44,7 +44,7 @@ const PlaylistDetail: React.FC = () => {
       // 1. Fetch playlist metadata
       const pData = await getPlaylist(playlistId);
       if (!pData) {
-        toast({ title: "Playlist n�o encontrada", variant: "destructive" });
+        toast({ title: "Playlist não encontrada", variant: "destructive" });
         navigate('/user');
         return;
       }
@@ -107,7 +107,7 @@ const PlaylistDetail: React.FC = () => {
       const success = await deletePlaylist(id);
       if (success) {
         navigate('/user');
-        toast({ title: "Playlist exclu�da" });
+        toast({ title: "Playlist excluída" });
       } else {
         toast({ title: "Erro ao excluir", variant: "destructive" });
       }
@@ -236,7 +236,7 @@ const PlaylistDetail: React.FC = () => {
                       ) : (
                         <div className="flex items-center gap-2 text-destructive text-sm opacity-70">
                            <AlertCircle className="w-4 h-4" />
-                           <span>M�sica n�o encontrada (ID: {item.song_id})</span>
+                           <span>Música não encontrada (ID: {item.song_id})</span>
                         </div>
                       )}
                     </div>

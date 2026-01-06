@@ -11,7 +11,6 @@ import SongViewer from '@/pages/user/SongViewer';
 import AdminHome from '@/pages/admin/AdminHome';
 import SongEditor from '@/pages/admin/SongEditor';
 import ImportExport from '@/pages/admin/ImportExport';
-import Settings from '@/pages/admin/Settings';
 import { initDB } from '@/lib/db';
 import { seedExampleSongs } from '@/lib/seedData';
 import { AuthProvider } from '@/contexts/SupabaseAuthContext';
@@ -46,7 +45,7 @@ function App() {
             <Route path="/admin/new" element={<PinProtection><SongEditor /></PinProtection>} />
             <Route path="/admin/edit/:id" element={<PinProtection><SongEditor /></PinProtection>} />
             <Route path="/admin/import" element={<PinProtection><ImportExport /></PinProtection>} />
-            <Route path="/admin/settings" element={<PinProtection><Settings /></PinProtection>} />
+
           </Routes>
         </Router>
       </AuthProvider>

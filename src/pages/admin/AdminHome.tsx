@@ -2,7 +2,7 @@
 import { Helmet } from 'react-helmet';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Upload, Settings, ArrowLeft, Music, ChevronUp } from 'lucide-react';
+import { Plus, Edit, Trash2, Upload, ArrowLeft, Music, ChevronUp } from 'lucide-react';
 import { getAllSongs, deleteSong } from '@/lib/db';
 import { getDisplayTitle } from '@/lib/songTitle';
 import { Song } from '@/types';
@@ -14,6 +14,8 @@ const AdminHome: React.FC = () => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [pageSize, setPageSize] = useState(15);
+  const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,6 +48,10 @@ const AdminHome: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const visibleSongs = normalizedQuery
     ? songs.filter(song =>
@@ -60,8 +66,19 @@ const AdminHome: React.FC = () => {
   };
 
 
-  const hinarioSongs = visibleSongs.filter(song => isHinario(song.title));
-  const louvorSongs = visibleSongs.filter(song => !isHinario(song.title));
+  const hinarioAll = visibleSongs.filter(song => isHinario(song.title));
+  const louvorAll = visibleSongs.filter(song => !isHinario(song.title));
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(Math.max(hinarioAll.length, louvorAll.length) / pageSize)
+  );
+  const safePage = Math.min(currentPage, totalPages);
+  const pageStart = (safePage - 1) * pageSize;
+  const pageEnd = pageStart + pageSize;
+
+  const hinarioSongs = hinarioAll.slice(pageStart, pageEnd);
+  const louvorSongs = louvorAll.slice(pageStart, pageEnd);
 
   return (
     <>
@@ -99,12 +116,7 @@ const AdminHome: React.FC = () => {
                   Importar/Exportar
                 </Button>
               </Link>
-              <Link to="/admin/settings">
-                <Button variant="secondary" size="sm" className="whitespace-nowrap">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configurações
-                </Button>
-              </Link>
+              
             </div>
           </div>
         </nav>
@@ -114,15 +126,30 @@ const AdminHome: React.FC = () => {
             <h2 className="text-xl font-bold">Biblioteca</h2>
             <span className="text-sm text-muted-foreground bg-secondary px-2 py-1 rounded-full">{visibleSongs.length} músicas</span>
           </div>
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Buscar por título ou artista..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full max-w-md px-4 py-2 bg-card border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-            />
-          </div>
+          <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+  <input
+    type="text"
+    placeholder="Buscar por título ou artista..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="w-full max-w-md px-4 py-2 bg-card border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+  />
+  <div className="flex items-center gap-2 text-xs">
+    <span className="text-muted-foreground">Por página</span>
+    <select
+      value={pageSize}
+      onChange={(e) => {
+        setPageSize(Number(e.target.value));
+        setCurrentPage(1);
+      }}
+      className="h-8 rounded-md border border-input bg-card px-2 text-xs"
+    >
+      {[10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(size => (
+        <option key={size} value={size}>{size}</option>
+      ))}
+    </select>
+  </div>
+</div>
 
           {visibleSongs.length === 0 ? (
             <div className="text-center py-12 bg-card rounded-lg border border-dashed border-border">
@@ -204,6 +231,27 @@ const AdminHome: React.FC = () => {
               </div>
             </div>
           )}
+          <div className="flex items-center justify-between mt-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={safePage <= 1}
+            >
+              Anterior
+            </Button>
+            <div className="text-xs text-muted-foreground">
+              Página {safePage} de {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={safePage >= totalPages}
+            >
+              Próxima
+            </Button>
+          </div>
         </div>
 
         {showBackToTop && (

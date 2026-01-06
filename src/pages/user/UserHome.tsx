@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useNavigate } from 'react-router-dom';
@@ -45,6 +45,8 @@ const UserHome: React.FC = () => {
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [pageSize, setPageSize] = useState(15);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadData();
@@ -54,6 +56,7 @@ const UserHome: React.FC = () => {
     let result = searchSongs(songs, searchQuery);
     result = sortSongs(result, sortOrder);
     setFilteredSongs(result);
+    setCurrentPage(1);
   }, [songs, searchQuery, sortOrder]);
 
   useEffect(() => {
@@ -106,10 +109,21 @@ const UserHome: React.FC = () => {
     const normalized = title.trim().toLowerCase();
     return normalized.startsWith('hino') || normalized.startsWith('hinos');
   };
+  const hinarioAll = filteredSongs.filter(song => isHinario(song.title));
+  const louvorAll = filteredSongs.filter(song => !isHinario(song.title));
+
+const totalPages = Math.max(
+  1,
+  Math.ceil(Math.max(hinarioAll.length, louvorAll.length) / pageSize)
+);
+const safePage = Math.min(currentPage, totalPages);
+const pageStart = (safePage - 1) * pageSize;
+const pageEnd = pageStart + pageSize;
+
+  const hinarioSongs = hinarioAll.slice(pageStart, pageEnd);
+  const louvorSongs = louvorAll.slice(pageStart, pageEnd);
 
 
-  const hinarioSongs = filteredSongs.filter(song => isHinario(song.title));
-  const louvorSongs = filteredSongs.filter(song => !isHinario(song.title));
 
   return (
     <>
@@ -196,35 +210,51 @@ const UserHome: React.FC = () => {
 
               {/* All Songs Gallery */}
               <section>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
                   <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
                     <Music className="w-4 h-4" />
                     <h2 className="text-sm font-bold uppercase tracking-wider">
-                      {searchQuery ? 'Resultados da Busca' : 'Todas as Músicas'}
+                      {searchQuery ? 'Resultados da Busca' : 'Todas as M?sicas'}
                       <span className="ml-2 text-muted-foreground font-normal normal-case">({filteredSongs.length})</span>
                     </h2>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 gap-2 text-xs">
-                        <Filter className="w-3.5 h-3.5" />
-                        {sortOrder === 'title' ? 'A-Z' : 'Data'}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setSortOrder('title')}>
-                        <Type className="w-4 h-4 mr-2" />
-                        Ordem Alfabética
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setSortOrder('created')}>
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Data de Importação
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground">Por p?gina</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="h-8 rounded-md border border-input bg-card px-2 text-xs"
+                      >
+                        {[10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(size => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 gap-2 text-xs">
+                          <Filter className="w-3.5 h-3.5" />
+                          {sortOrder === 'title' ? 'A-Z' : 'Data'}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setSortOrder('title')}>
+                          <Type className="w-4 h-4 mr-2" />
+                          Ordem Alfab?tica
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortOrder('created')}>
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Data de Importa??o
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-
                 {filteredSongs.length === 0 ? (
                   <div className="text-center py-12 bg-card/50 rounded-xl border border-border border-dashed">
                     <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
@@ -317,6 +347,27 @@ const UserHome: React.FC = () => {
                     </div>
                   </div>
                 )}
+                <div className="flex items-center justify-between mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={safePage <= 1}
+                  >
+                    Anterior
+                  </Button>
+                  <div className="text-xs text-muted-foreground">
+                    Página {safePage} de {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={safePage >= totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
               </section>
             </TabsContent>
 

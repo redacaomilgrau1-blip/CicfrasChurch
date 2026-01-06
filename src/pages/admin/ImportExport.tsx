@@ -54,8 +54,8 @@ const ImportExport: React.FC = () => {
     URL.revokeObjectURL(url);
 
     toast({
-      title: 'Exporta��o conclu�da',
-      description: `${songs.length} m�sicas exportadas para JSON.`,
+      title: 'Exportação concluída',
+      description: `${songs.length} músicas exportadas para JSON.`,
     });
   };
 
@@ -77,31 +77,31 @@ const ImportExport: React.FC = () => {
     URL.revokeObjectURL(url);
 
     toast({
-      title: 'Exporta��o conclu�da',
-      description: `${songs.length} m�sicas exportadas para ChordPro.`,
+      title: 'Exportação concluída',
+      description: `${songs.length} músicas exportadas para ChordPro.`,
     });
   };
 
   const handleDownloadTemplate = () => {
-    const templateContent = `{title: Exemplo de M�sica 1}
+    const templateContent = `{title: Exemplo de Música 1}
 {artist: Banda Teste}
 {key: C}
 
 C              G
-Esta � a primeira linha da m�sica
+Esta é a primeira linha da música
 Am             F
-Esta � a segunda linha
+Esta é a segunda linha
 
 ---
 
-{title: Exemplo de M�sica 2}
+{title: Exemplo de Música 2}
 {artist: Cantor Teste}
 {key: G}
 
 G              D
-Outra m�sica come�a aqui
+Outra música começa aqui
 Em             C
-Separada por tr�s tra�os`;
+Separada por três traços`;
 
     const blob = new Blob([templateContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -110,7 +110,7 @@ Separada por tr�s tra�os`;
     a.download = 'modelo-importacao.txt';
     a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Modelo baixado", description: "Use este arquivo como guia para importar suas m�sicas." });
+    toast({ title: "Modelo baixado", description: "Use este arquivo como guia para importar suas músicas." });
   };
 
   const handleImportJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,14 +148,14 @@ Separada por tr�s tra�os`;
         }
 
         toast({
-          title: 'Importa��o conclu�da',
-          description: `${songs.length} m�sicas importadas do JSON.`,
+          title: 'Importação concluída',
+          description: `${songs.length} músicas importadas do JSON.`,
         });
 
       } catch (error) {
         toast({
-          title: 'Falha na importa��o',
-          description: 'Formato de arquivo JSON inv�lido.',
+          title: 'Falha na importação',
+          description: 'Formato de arquivo JSON inválido.',
           variant: 'destructive',
         });
       } finally {
@@ -227,12 +227,12 @@ Separada por tr�s tra�os`;
 
         if (importedCount > 0) {
           toast({
-            title: 'Importa��o conclu�da',
-            description: `${importedCount} m�sicas adicionadas � biblioteca. ${failCount > 0 ? `(${failCount} falharam)` : ''}`,
+            title: 'Importação concluída',
+            description: `${importedCount} músicas adicionadas à biblioteca. ${failCount > 0 ? `(${failCount} falharam)` : ''}`,
           });
         } else {
           toast({
-            title: 'Nenhuma m�sica importada',
+            title: 'Nenhuma música importada',
             description: 'Verifique o formato do arquivo (use o modelo).',
             variant: 'destructive',
           });
@@ -241,7 +241,7 @@ Separada por tr�s tra�os`;
       } catch (error) {
         console.error(error);
         toast({
-          title: 'Falha na importa��o',
+          title: 'Falha na importação',
           description: 'Erro ao ler o arquivo.',
           variant: 'destructive',
         });
@@ -268,11 +268,11 @@ Separada por tr�s tra�os`;
   };
 
   const handleClearAll = async () => {
-    if (window.confirm('Tem certeza que deseja apagar TODAS as m�sicas? Isso n�o pode ser desfeito!')) {
+    if (window.confirm('Tem certeza que deseja apagar TODAS as músicas? Isso não pode ser desfeito!')) {
       await clearAllData();
       toast({
         title: 'Dados apagados',
-        description: 'Todas as m�sicas foram removidas.',
+        description: 'Todas as músicas foram removidas.',
       });
     }
   };
@@ -437,7 +437,7 @@ Separada por tr�s tra�os`;
             </h2>
             <div className="p-4 rounded-lg border border-destructive/20 bg-destructive/5">
               <p className="text-sm text-muted-foreground mb-4">
-                Esta a��o apagar� permanentemente todas as m�sicas do banco de dados local.
+                Esta ação apagará permanentemente todas as músicas do banco de dados local.
               </p>
               <Button onClick={handleClearAll} variant="destructive" size="sm">
                 Apagar Tudo
