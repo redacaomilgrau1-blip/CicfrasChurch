@@ -214,14 +214,14 @@ const pageEnd = pageStart + pageSize;
                   <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
                     <Music className="w-4 h-4" />
                     <h2 className="text-sm font-bold uppercase tracking-wider">
-                      {searchQuery ? 'Resultados da Busca' : 'Todas as M?sicas'}
+                      {searchQuery ? 'Resultados da Busca' : 'Todas as Músicas'}
                       <span className="ml-2 text-muted-foreground font-normal normal-case">({filteredSongs.length})</span>
                     </h2>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="text-muted-foreground">Por p?gina</span>
+                      <span className="text-muted-foreground">Por página</span>
                       <select
                         value={pageSize}
                         onChange={(e) => {
