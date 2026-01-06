@@ -86,17 +86,31 @@ const AdminHome: React.FC = () => {
         <title>Admin - Gerenciador</title>
       </Helmet>
 
-      <div className="min-h-screen bg-background text-foreground">
-        <nav className="border-b border-border bg-card">
+      <div className="min-h-screen bg-slate-200 text-foreground dark:bg-background">
+        <nav className="border-b border-border bg-slate-200 dark:bg-card">
           <div className="max-w-6xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Music className="w-5 h-5 text-purple-600" />
-                <span className="font-bold text-lg">Cifras Church Admin</span>
+                <img
+                  src="/logo-cifras-church.webp"
+                  alt="Cifras Church"
+                  className="w-28 h-14 object-contain hidden dark:block"
+                />
+                <img
+                  src="/logo-cifras-church-dia.webp"
+                  alt="Cifras Church"
+                  className="w-28 h-14 object-contain dark:hidden"
+                />
+                <span className="font-bold text-lg">Admin</span>
               </div>
               <div className="flex items-center gap-2">
                 <ModeToggle />
-                <Button variant="outline" size="sm" onClick={() => navigate('/user')}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
+                  onClick={() => navigate('/user')}
+                >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Sair
                 </Button>
@@ -111,7 +125,11 @@ const AdminHome: React.FC = () => {
                 </Button>
               </Link>
               <Link to="/admin/import">
-                <Button variant="secondary" size="sm" className="whitespace-nowrap">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="whitespace-nowrap bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-secondary dark:text-secondary-foreground"
+                >
                   <Upload className="w-4 h-4 mr-2" />
                   Importar/Exportar
                 </Button>
@@ -235,6 +253,7 @@ const AdminHome: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
+              className="border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={safePage <= 1}
             >
@@ -246,6 +265,7 @@ const AdminHome: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
+              className="border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={safePage >= totalPages}
             >
@@ -259,7 +279,7 @@ const AdminHome: React.FC = () => {
             type="button"
             variant="secondary"
             size="icon"
-            className="fixed bottom-6 right-6 rounded-full shadow-lg border border-border"
+            className="fixed bottom-6 right-6 rounded-full shadow-lg border border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             title="Voltar ao topo"
           >

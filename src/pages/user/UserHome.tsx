@@ -137,14 +137,20 @@ const pageEnd = pageStart + pageSize;
         <title>Biblioteca - Gerenciador de Cifras</title>
       </Helmet>
 
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="min-h-screen bg-slate-200 text-foreground transition-colors duration-300 dark:bg-background">
+        <header className="sticky top-0 z-20 bg-slate-200/80 backdrop-blur-md border-b border-border dark:bg-background/80">
           <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-purple-600 rounded-lg p-1.5">
-                <Music className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-bold tracking-tight hidden sm:inline-block">Cifras Church</span>
+              <img
+                src="/logo-cifras-church.webp"
+                alt="Cifras Church"
+                className="w-28 h-14 object-contain hidden dark:block"
+              />
+              <img
+                src="/logo-cifras-church-dia.webp"
+                alt="Cifras Church"
+                className="w-28 h-14 object-contain dark:hidden"
+              />
             </div>
             
             <div className="flex items-center gap-2">
@@ -243,7 +249,11 @@ const pageEnd = pageStart + pageSize;
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 gap-2 text-xs">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-2 text-xs border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
+                        >
                           <Filter className="w-3.5 h-3.5" />
                           {sortOrder === 'title' ? 'A-Z' : 'Data'}
                         </Button>
@@ -357,6 +367,7 @@ const pageEnd = pageStart + pageSize;
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={safePage <= 1}
                   >
@@ -368,6 +379,7 @@ const pageEnd = pageStart + pageSize;
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={safePage >= totalPages}
                   >
@@ -404,7 +416,13 @@ const pageEnd = pageStart + pageSize;
                       />
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                      <Button
+                        variant="outline"
+                        className="border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
+                        onClick={() => setIsDialogOpen(false)}
+                      >
+                        Cancelar
+                      </Button>
                       <Button onClick={handleCreatePlaylist} disabled={!newPlaylistName.trim()}>Criar</Button>
                     </DialogFooter>
                   </DialogContent>
@@ -415,7 +433,11 @@ const pageEnd = pageStart + pageSize;
                 <div className="text-center py-16 bg-card/50 rounded-xl border border-border border-dashed">
                   <ListMusic className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
                   <p className="text-muted-foreground mb-4">Nenhuma playlist criada ainda.</p>
-                  <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+                  <Button
+                    variant="outline"
+                    className="border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
+                    onClick={() => setIsDialogOpen(true)}
+                  >
                     Criar Primeira Playlist
                   </Button>
                 </div>
@@ -463,7 +485,7 @@ const pageEnd = pageStart + pageSize;
             type="button"
             variant="secondary"
             size="icon"
-            className="fixed bottom-6 right-6 rounded-full shadow-lg border border-border"
+            className="fixed bottom-6 right-6 rounded-full shadow-lg border border-slate-400 text-slate-800 hover:bg-slate-300/60 dark:border-border dark:text-foreground"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             title="Voltar ao topo"
           >
