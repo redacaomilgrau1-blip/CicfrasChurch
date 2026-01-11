@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { Reorder } from 'framer-motion';
-import { ArrowLeft, GripVertical, Trash2, Plus, Music, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, GripVertical, Trash2, Plus, Music, AlertCircle, Loader2, Download } from 'lucide-react';
 import { getPlaylist, getPlaylistItems, addSongToPlaylist, removePlaylistItem, updatePlaylistOrder, deletePlaylist } from '@/lib/playlistService';
 import { getAllSongs } from '@/lib/db';
 import { getDisplayTitle } from '@/lib/songTitle';
+import { parseContent, ParsedLine } from '@/lib/chordParser';
 import { Playlist, PlaylistItem, Song } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -114,6 +115,170 @@ const PlaylistDetail: React.FC = () => {
     }
   };
 
+  const handleExportPdf = () => {
+    if (!playlist) return;
+    const printWindow = window.open('', '_blank', 'width=900,height=1200');
+    if (!printWindow) {
+      toast({ title: "Nao foi possivel abrir a janela de impressao", variant: "destructive" });
+      return;
+    }
+
+    const escapeHtml = (value: string) =>
+      value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const fontSize = 22;
+
+    const renderLine = (line: ParsedLine, fontSize: number) => {
+      const chordLineHeight = `${fontSize * 1.2}px`;
+      if (line.type === 'empty') {
+        return '<div class="line empty"></div>';
+      }
+
+      if (line.type === 'chord') {
+        const chords = (line.chordPositions || [])
+          .map(cp => `<span class="chord" style="left:${cp.position}ch">${escapeHtml(cp.chord)}</span>`)
+          .join('');
+        return `<div class="line chord-line" style="height:${chordLineHeight}"><div class="chords" style="font-size:${fontSize}px">${chords}</div></div>`;
+      }
+
+      if (line.type === 'lyric') {
+        return `<div class="line lyric" style="font-size:${fontSize}px">${escapeHtml(line.lyric)}</div>`;
+      }
+
+      if (line.type === 'both') {
+        const chords = (line.chordPositions || [])
+          .map(cp => `<span class="chord" style="left:${cp.position}ch">${escapeHtml(cp.chord)}</span>`)
+          .join('');
+        return `
+          <div class="line both">
+            <div class="chords" style="height:${chordLineHeight}">
+              <div class="chord-layer" style="font-size:${fontSize}px">${chords}</div>
+            </div>
+            <div class="lyric" style="font-size:${fontSize}px">${escapeHtml(line.lyric)}</div>
+          </div>
+        `;
+      }
+
+      return `<div class="line directive">${escapeHtml(line.content)}</div>`;
+    };
+
+    const pages = items.length
+      ? items.map((item, index) => {
+          if (!item.song) {
+            return `
+              <section class="page">
+                <h1>${escapeHtml(playlist.name)}</h1>
+                <div class="meta">Item ${index + 1}</div>
+                <div class="missing">Musica nao encontrada (ID: ${escapeHtml(item.song_id)})</div>
+              </section>
+            `;
+          }
+
+          const songTitle = escapeHtml(getDisplayTitle(item.song.title));
+          const artist = escapeHtml(item.song.artist || '');
+          const parsed = parseContent(item.song.content || '');
+          const contentHtml = parsed.map(line => renderLine(line, fontSize)).join('');
+          return `
+            <section class="page">
+              <div class="song-header">
+                <h1>${songTitle}</h1>
+                ${artist ? `<div class="artist">${artist}</div>` : ''}
+              </div>
+              <div class="content">
+                ${contentHtml || '<div class="empty">Cifra vazia</div>'}
+              </div>
+            </section>
+          `;
+        }).join('')
+      : `
+          <section class="page">
+            <h1>${escapeHtml(playlist.name)}</h1>
+            <div class="empty">Playlist vazia</div>
+          </section>
+        `;
+
+    const html = `<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(playlist.name)} - PDF</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --chord: #7e22ce;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f0f12;
+          --text: #f5f5f5;
+          --muted: #a1a1aa;
+          --border: #2b2b2f;
+          --chord: #c084fc;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+      }
+      @page { size: A4 portrait; margin: 14mm; }
+      h1 { margin: 0 0 6px; font-size: 24px; }
+      .page {
+        min-height: 100vh;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      .page:last-child { border-bottom: none; }
+      .song-header { margin-bottom: 16px; }
+      .artist { color: var(--muted); font-size: 12px; }
+      .meta { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+      .content { font-family: "Consolas", "Courier New", monospace; }
+      .line { margin: 0; white-space: pre; }
+      .line.empty { height: 12px; }
+      .lyric { color: var(--text); line-height: 1.25; }
+      .chord-line, .chords { position: relative; }
+      .chord-layer, .chords {
+        position: relative;
+        font-weight: 700;
+        color: var(--chord);
+        white-space: pre;
+      }
+      .chord { position: absolute; top: 0; }
+      .both { margin-bottom: 6px; }
+      .directive { color: var(--muted); font-size: 12px; font-style: italic; margin: 8px 0; }
+      .missing { color: #b91c1c; font-weight: 600; }
+      .empty { color: var(--muted); font-style: italic; }
+      @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .page { page-break-after: always; break-after: page; border-bottom: none; }
+        .page:last-child { page-break-after: auto; break-after: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    ${pages}
+  </body>
+</html>`;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 200);
+  };
+
   const filteredAddSongs = allSongs
     .filter(s => !items.some(i => i.song_id === s.id))
     .filter(s => s.title.toLowerCase().includes(searchSong.toLowerCase()));
@@ -203,6 +368,14 @@ const PlaylistDetail: React.FC = () => {
                 </div>
               </DialogContent>
             </Dialog>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={handleExportPdf}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar PDF
+            </Button>
           </div>
 
           {/* List */}
